@@ -1,0 +1,128 @@
+1.ingestion server- computing system designed to collect, process, and securely transfer data from various sources into a centralized destination
+digital "middleman" that connects source systems (like cameras, live streams, or databases) to target systems (like data lakes, cloud warehouses, or streaming platforms)
+
+# to access globally-> deploy on a server-> hosted on a platform. every server-> own ip address
+differentiate b/w different servers on a local host- port no.(5000,8000)
+
+# SentinelAPI — Complete Build Guide
+
+A real-time API anomaly detection platform. Built from scratch.
+
+---
+
+## Architecture Overview
+
+```
+┌──────────────┐     telemetry     ┌──────────────┐     Redis Streams     ┌──────────────────┐
+│  Your App +  │ ───────────────▶  │  Ingestion    │ ──────────────────▶ │  Feature          │
+│  SDK Client  │   (async HTTP)    │  Server       │                      │  Aggregator       │
+└──────────────┘                   │  (FastAPI)    │                      │  (Worker)         │
+                                   └──────────────┘                       └────────┬─────────┘
+                                                                                   │
+                                          ┌────────────────────────────────────────┘
+                                          ▼
+                                   ┌──────────────────┐        ┌──────────────────┐
+                                   │  ML Engine        │        │  PostgreSQL      │
+                                   │  - Autoencoder    │◀──────▶│  (metrics +      │
+                                   │  - Isolation Forest│        │   anomalies)     │
+                                   └────────┬─────────┘        └──────────────────┘
+                                            │
+                              ┌─────────────┼─────────────┐
+                              ▼             ▼             ▼
+                       ┌───────────┐ ┌───────────┐ ┌───────────┐
+                       │ WebSocket │ │  Slack     │ │  Email    │
+                       │ Dashboard │ │  Alerts    │ │  Alerts   │
+                       │ (React)   │ │            │ │           │
+                       └───────────┘ └───────────┘ └───────────┘
+```
+
+**Components you'll build (in order):**
+
+1. SDK (Python package) — what users install in their app
+2. Ingestion Server (FastAPI) — receives telemetry, pushes to Redis
+3. Feature Aggregator (background worker) — computes rolling metrics
+4. ML Engine — autoencoder + isolation forest for anomaly detection
+5. Alert System — Slack/email notifications with context
+6. React Dashboard — live monitoring UI with WebSocket
+7. Docker Compose — one-command deployment
+8. Polish — README, demo script, PyPI package
+
+---
+
+## Prerequisites & Setup
+
+### Tools to install
+
+```bash
+# Python 3.10+
+python --version
+
+# Node.js 18+ (for React dashboard)
+node --version
+
+# Docker & Docker Compose
+docker --version
+docker compose version
+
+# Redis (local dev, or use Docker)
+redis-server --version
+
+# PostgreSQL (local dev, or use Docker)
+psql --version
+```
+
+### Create the project structure
+
+```bash
+mkdir sentinel-api && cd sentinel-api
+
+# Top-level structure
+mkdir -p sdk/sentinel_sdk
+mkdir -p server/app/{routes,services,models,ml,workers}
+mkdir -p server/tests
+mkdir -p dashboard/src/{components,hooks,utils}
+mkdir -p scripts
+mkdir -p docker
+
+# Initialize git
+git init
+echo "__pycache__/\n*.pyc\n.env\nnode_modules/\n*.egg-info/\ndist/\n.venv/" > .gitignore
+```
+
+Your tree should look like:
+
+```
+sentinel-api/
+├── sdk/                    # Python SDK (pip-installable)
+│   ├── sentinel_sdk/
+│   │   ├── __init__.py
+│   │   ├── client.py
+│   │   └── middleware.py
+│   ├── setup.py
+│   └── README.md
+├── server/                 # Backend (FastAPI)
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── config.py
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── models/
+│   │   ├── ml/
+│   │   └── workers/
+│   ├── requirements.txt
+│   └── tests/
+├── dashboard/              # Frontend (React)
+│   ├── src/
+│   ├── package.json
+│   └── public/
+├── scripts/                # Demo & utility scripts
+├── docker/                 # Dockerfiles
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## PHASE 1: The SDK (Days 1–2)
+
+**Goal:** A pip-installable package that instruments any FastAPI/Flask app with zero config.
