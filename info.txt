@@ -4,6 +4,8 @@ digital "middleman" that connects source systems (like cameras, live streams, or
 # to access globally-> deploy on a server-> hosted on a platform. every server-> own ip address
 differentiate b/w different servers on a local host- port no.(5000,8000)
 
+# Telemetry is the automated process of collecting data from remote or inaccessible sources and transmitting it to a central system for monitoring, analysis, and action.
+
 # SentinelAPI — Complete Build Guide
 
 A real-time API anomaly detection platform. Built from scratch.
@@ -68,7 +70,11 @@ docker compose version
 redis-server --version
 
 # PostgreSQL (local dev, or use Docker)
-psql --version
+psql --version 
+to run psql: docker run --name postgres-db `
+-e POSTGRES_PASSWORD=postgres `
+-p 5432:5432 `
+-d postgres
 ```
 
 ### Create the project structure
@@ -126,3 +132,5 @@ sentinel-api/
 ## PHASE 1: The SDK (Days 1–2)
 
 **Goal:** A pip-installable package that instruments any FastAPI/Flask app with zero config.
+
+#do not commit node modules in git
