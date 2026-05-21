@@ -134,3 +134,9 @@ sentinel-api/
 **Goal:** A pip-installable package that instruments any FastAPI/Flask app with zero config.
 
 #do not commit node modules in git
+# redis server run-> docker exec -it redis-server redis-cli
+
+WebSocket -> persistent connection between clinet and server- dataexchange at any times
+HTTP - uni-directional stateless protocol -> Request and Return always, halfduplex(1 time pe 1)
+polling - short & long | Server Sent events
+WS first req is HTTP

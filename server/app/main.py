@@ -21,3 +21,9 @@ app.include_router(ingest.router)
 @app.get("/")
 async def root():
     return {"service": "SentinelAPI", "version": "0.1.0"}
+
+from .routes import ingest, websocket, dashboard
+
+app.include_router(ingest.router)
+app.include_router(websocket.router)
+app.include_router(dashboard.router)
