@@ -15,9 +15,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(ingest.router)
-
-
 @app.get("/")
 async def root():
     return {"service": "SentinelAPI", "version": "0.1.0"}

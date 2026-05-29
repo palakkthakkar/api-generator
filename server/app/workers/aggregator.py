@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 import redis.asyncio as aioredis
 from ..config import settings
 from ..models.database import SessionLocal, MetricWindow
+from ..ml.detector import AnomalyDetector
 
 WINDOW_SEC = settings.aggregation_window_sec  # 60 seconds
 
@@ -23,6 +24,7 @@ class FeatureAggregator:
         self.redis = None
         self.buffers = defaultdict(list)   # stream_key → [events in current window]
         self.window_starts = {}            # stream_key → window start time
+        self.detectors = {}                # stream_key → AnomalyDetector
         self.consumer_group = "aggregator"
         self.consumer_name = "worker-1"
 
@@ -143,6 +145,42 @@ class FeatureAggregator:
                 "timestamp": window.window_start.isoformat(),
             })
         )
+
+        # Evaluate the window for anomalies and publish if detected.
+        await self._detect_anomaly(window)
+
+    async def _detect_anomaly(self, window: MetricWindow):
+        """Score the aggregated window and publish anomaly events."""
+        stream_key = f"telemetry:{window.app_name}:{window.endpoint}"
+        detector = self.detectors.get(stream_key)
+        if detector is None:
+            detector = AnomalyDetector(model_dir="models")
+            self.detectors[stream_key] = detector
+
+        if not detector.is_trained:
+            trained = detector.train_on_history(
+                window.app_name,
+                window.endpoint,
+                min_windows=settings.min_training_windows,
+            )
+            if not trained:
+                return
+
+        result = detector.evaluate(window)
+        if result and result.get("is_anomaly"):
+            anomaly_payload = {
+                "endpoint": window.endpoint,
+                "app_name": window.app_name,
+                "detected_at": datetime.now(timezone.utc).isoformat(),
+                "severity": result["severity"],
+                "score": result["autoencoder"]["anomaly_score"],
+                "features": result["autoencoder"]["top_contributing_features"],
+            }
+            print(f"[Aggregator] Anomaly detected on {window.endpoint}: {anomaly_payload['severity']:.2f}")
+            await self.redis.publish(
+                f"anomaly:{window.app_name}:{window.endpoint}",
+                json.dumps(anomaly_payload),
+            )
 
 
 async def main():

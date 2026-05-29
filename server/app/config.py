@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     # ML config
     anomaly_threshold: float = 2.0       # reconstruction error multiplier
     aggregation_window_sec: int = 60     # 1-minute rolling windows
-    min_training_windows: int = 100      # minimum data points before training
+    min_training_windows: int = 3        # minimum data points before training (lowered for demo)
     retrain_interval_min: int = 30       # retrain every 30 minutes
     
     class Config:
