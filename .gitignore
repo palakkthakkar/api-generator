@@ -1,7 +1,13 @@
-node_modules/
-venv/
 __pycache__/
+*.pyc
+*.pyo
 .env
+node_modules/
+*.egg-info/
 dist/
 build/
-*.pyc
+.venv/
+venv/
+models/*.pt
+models/*.pkl
+.DS_Store

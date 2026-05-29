@@ -1,12 +1,56 @@
 services:
   redis:
-    image: redis:latest
-    container_name: redis-server
+    image: redis:7-alpine
     ports:
       - "6379:6379"
-    restart: unless-stopped
+    volumes:
+      - redis_data:/data
 
-# docker run --name postgres-db `
-# -e POSTGRES_PASSWORD=postgres `
-# -p 5432:5432 `
-# -d postgres
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel
+      POSTGRES_DB: sentinel
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  server:
+    build:
+      context: ./server
+      dockerfile: ../docker/Dockerfile.server
+    ports:
+      - "8100:8100"
+    environment:
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://sentinel:sentinel@postgres:5432/sentinel
+    depends_on:
+      - redis
+      - postgres
+
+  aggregator:
+    build:
+      context: ./server
+      dockerfile: ../docker/Dockerfile.server
+    command: python -m app.workers.aggregator
+    environment:
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://sentinel:sentinel@postgres:5432/sentinel
+    depends_on:
+      - redis
+      - postgres
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: ../docker/Dockerfile.dashboard
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+
+volumes:
+  redis_data:
+  pg_data:
