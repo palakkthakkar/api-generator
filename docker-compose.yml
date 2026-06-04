@@ -9,9 +9,9 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: sentinel
-      POSTGRES_PASSWORD: sentinel
-      POSTGRES_DB: sentinel
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-sentinel}
     ports:
       - "5432:5432"
     volumes:
@@ -24,8 +24,8 @@ services:
     ports:
       - "8100:8100"
     environment:
-      REDIS_URL: redis://redis:6379
-      DATABASE_URL: postgresql://sentinel:sentinel@postgres:5432/sentinel
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://sentinel:password@postgres:5432/sentinel}
     depends_on:
       - redis
       - postgres
@@ -36,8 +36,8 @@ services:
       dockerfile: ../docker/Dockerfile.server
     command: python -m app.workers.aggregator
     environment:
-      REDIS_URL: redis://redis:6379
-      DATABASE_URL: postgresql://sentinel:sentinel@postgres:5432/sentinel
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://sentinel:password@postgres:5432/sentinel}
     depends_on:
       - redis
       - postgres

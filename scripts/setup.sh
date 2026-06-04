@@ -28,9 +28,9 @@ touch server/app/workers/__init__.py
 # ── Create .env ──
 cat > server/.env << 'EOF'
 REDIS_URL=redis://localhost:6379
-DATABASE_URL=postgresql://sentinel:sentinel@localhost:5432/sentinel
+DATABASE_URL=postgresql://<user>:<password>@localhost:5432/sentinel
 EOF
- 
+
 # ── Create .gitignore ──
 cat > .gitignore << 'EOF'
 __pycache__/
@@ -54,7 +54,7 @@ echo "   1. Copy SDK files into sdk/sentinel_sdk/"
 echo "   2. Copy server files into server/app/"
 echo "   3. Copy dashboard files into dashboard/src/"
 echo "   4. Start Redis:     redis-server"
-echo "   5. Start Postgres:  docker run -d -p 5432:5432 -e POSTGRES_USER=sentinel -e POSTGRES_PASSWORD=sentinel -e POSTGRES_DB=sentinel postgres:16-alpine"
+echo "   5. Start Postgres:  docker run -d -p 5432:5432 -e POSTGRES_USER=sentinel -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=sentinel postgres:16-alpine"
 echo "   6. Start server:    cd server && pip install -r requirements.txt && uvicorn app.main:app --port 8100 --reload"
 echo "   7. Start aggregator: cd server && python -m app.workers.aggregator"
 echo "   8. Start dashboard: cd dashboard && npm install && npm start"
